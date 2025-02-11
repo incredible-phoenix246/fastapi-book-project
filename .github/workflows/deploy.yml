@@ -1,0 +1,42 @@
+name: Deployment
+
+on:
+  workflow_run:
+    workflows: ["Build and Test"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Install SSHPass
+        run: sudo apt-get install -y sshpass
+
+      - name: Deploy Application
+        env:
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
+            cd ~/hng12/stage2
+            git pull origin main
+            python3 -m venv venv || true
+            source venv/bin/activate
+            pip install --upgrade pip
+            pip install -r requirements.txt
+            sudo systemctl restart fastapi.service
+          EOF
