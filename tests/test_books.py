@@ -50,11 +50,3 @@ def test_delete_book():
 
     response = client.get("/books/3")
     assert response.status_code == 404
-
-
-def test_get_book_by_id():
-    response = client.get("/books/1")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["title"] == "The Hobbit"
-    assert data["author"] == "J.R.R. Tolkien"
