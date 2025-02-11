@@ -1,5 +1,4 @@
 from tests import client
-import main
 
 def test_get_all_books():
     response = client.get("/books/")
